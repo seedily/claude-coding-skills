@@ -1,6 +1,6 @@
 # 前端编程规范
 
-本规范适用于 `admin-biz-web`、`member-biz-web` 等 Vue3 + TypeScript + Vite + Pinia 前端工程。
+本规范适用于 Vue3 + TypeScript + Vite + Pinia 前端工程。
 
 ---
 
@@ -59,16 +59,35 @@ const request = {
 | 更新 | `update` | `updateMenu`、`updateMemberProfile` |
 | 删除 | `delete` | `deleteMenu`、`deleteChatSession` |
 
+**禁止 RESTful / 资源复数风格命名**（本工程 RPC 风格、全 POST，不用 HTTP 动词语义）：
+
+| ❌ 错误 | ✅ 正确 | 说明 |
+|---|---|---|
+| `getXxx` | `queryXxx` | 禁止 `get` 前缀，查询统一 `query` |
+| `listXxx` | `queryXxxList` | 禁止 `list` 前缀 |
+| `queryUsers`（复数 s） | `queryUserList` | 返回列表必须 `List` 后缀，禁止裸复数 |
+| `queryUser`（实际返回数组/分页） | `queryUserList` / `queryUserPage` | 集合结果加 `List`，分页加 `Page`，禁止用单数名承载集合 |
+
 ### 2.3 API 路径
 
-路径以 `/模块/资源/动作` 组织，例如：
+路径以 `/模块/资源/动作` 组织，**资源用单数**，动作用 `query` / `queryList` / `queryPage` / `queryDetail` / `create` / `update` / `delete` 等。例如：
 
 ```ts
-'/admin/menu/queryTree'
-'/admin/user/queryPage'
-'/member/news/queryPage'
-'/member/profile/update'
+'/system/menu/queryTree'
+'/system/user/queryPage'
+'/portal/news/queryList'
+'/portal/profile/update'
 ```
+
+**禁止 RESTful 风格路径**（不用资源复数、不用名词当动作、不用路径参数表达动作）：
+
+| ❌ 错误 | ✅ 正确 | 说明 |
+|---|---|---|
+| `/xxx/item/groups` | `/xxx/item/group/queryList` | 列表必须有 `queryList`，资源单数 |
+| `/xxx/catalog/list` | `/xxx/catalog/queryList` | 禁止 `list`，用 `queryList` |
+| `/xxx/order/detail` | `/xxx/order/queryDetail` | 名词当动作禁止，用 `queryDetail` |
+| `/xxx/profile/get` | `/xxx/profile/query` | 禁止 `get`，用 `query` |
+| `/xxx/news/:id` | `/xxx/news/queryDetail` | 禁止 RESTful 路径参数 |
 
 ### 2.4 DTO / VO 字段命名
 
@@ -140,6 +159,8 @@ export interface NewsPageRequest {
 
 ### 4.3 禁止事项
 
+- 禁止 API 函数使用 `get` / `list` 前缀（查询统一 `query`，列表 `queryXxxList`，分页 `queryXxxPage`）。
+- 禁止 URL 使用 RESTful 风格（资源复数、`list`/`get`/`detail` 名词当动作、路径参数表达动作）。
 - 禁止在 API 类型与页面数据中使用 snake_case 字段。
 - 禁止在 `request.ts` 中暴露非 POST 方法。
 - 禁止在组件内直接使用 `axios` 实例，统一通过 `@/utils/request`。

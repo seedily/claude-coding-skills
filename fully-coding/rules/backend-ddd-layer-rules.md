@@ -333,9 +333,10 @@ public void batchCreateUsers(List<CreateUserRequest> requests) {
 
 ```java
 return {{config.response_wrapper_success}}(userDto);
-return {{config.base_response_class}}.success();
 return {{config.response_wrapper_fail}}("100001", "用户名不能为空");
 ```
+
+> `{{config.response_wrapper_success}}` / `{{config.response_wrapper_fail}}` 是统一响应入口；`{{config.base_response_class}}` 是其底层基类，业务代码一律通过 `response_wrapper_*` 入口返回，不直接调用 `base_response_class` 的静态方法。
 
 #### 统一响应结构
 

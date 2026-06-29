@@ -18,7 +18,7 @@ description: fully-coding-batch 断点续跑规则。仅定义批次接管、子
 ### 接管流程
 
 1. 扫描 `{{config.output_dir}}/BATCH-*-progress.md`，选择最新批次进度文档。
-2. 读取 BATCH frontmatter：`status`、`last-heartbeat`、`current-subtask`、`pid`。
+2. 读取 BATCH frontmatter：校验 `type == batch-progress`（防同名前缀的非 batch 文件误匹配），再读 `status`、`last-heartbeat`、`current-subtask`、`pid`。
 3. 按 `../../fully-coding/rules/heartbeat-resume-rules.md` 判断当前 batch Orchestrator 是否仍活跃：
    - 活跃：跳过本轮 resume。
    - 超时或失败：允许接管。

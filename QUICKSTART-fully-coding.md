@@ -51,7 +51,7 @@ flowchart TD
     S4 --> S5[Step 5 开发实现<br/>角色：开发者]
     S5 --> S6[Step 6 代码评审<br/>角色：DBA + 代码评审员]
     S6 -->|auto-fix| S5
-    S6 -->|通过 / 有条件通过| S7[Step 7 测试用例<br/>角色：开发者]
+    S6 -->|通过 / 需自动修复| S7[Step 7 测试用例<br/>角色：开发者]
     S7 -->|测试失败且可修复| S5
     S7 -->|测试通过| S8[Step 8 文档更新<br/>角色：架构师]
     S8 --> S9[Step 9 自主进化<br/>角色：Orchestrator]

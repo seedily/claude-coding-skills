@@ -22,36 +22,37 @@ description: fully-coding 工作流的 Git 操作规范。包含分支创建、c
 ### 2.1 创建时机
 
 - **fully-coding 单任务**：步骤 3（开发范围）确定后、步骤 5（开发实现）之前
-- **fully-coding-batch 批次**：批次步骤 2-B（串行开发启动）统一创建，所有子任务共享
+- **fully-coding-batch 批次**：批次步骤 2（串行开发启动，见 `../../fully-coding-batch/rules/batch-workflow-rules.md §3`）统一创建，所有子任务共享
 
 ### 2.2 命名格式
 
 ```
-{type}/{task-id}-{brief-desc}
+{type}/{yyyyMM}
 ```
 
 - `type`：feature / fix / refactor / docs / test / chore
-- `task-id`：
-  - 单任务：本次任务时间戳 `{yyyyMMdd-HHmmss}`
-  - 批次：批次时间戳（即 BATCH 进度文档的时间戳）
-- `brief-desc`：2-5 个英文单词简述，kebab-case
+- `yyyyMM`：当前月份（如 `202506`），作为月度大版本交付分支
+- 同类型同月的多个任务/批次共用同一个分支，允许多任务向月度大版本分支提交代码
 - **示例**：
-  - 单任务：`feature/20250610-143000-admin-batch-import`
-  - 批次：`feature/20250610-143000-user-order-pay`
+  - `feature/202506`
+  - `fix/202506`
 
 ### 2.3 约束
 
 - 禁止在 `main` / `master` 分支上直接提交
-- 新分支基于当前分支最新提交创建：先 `git fetch` 获取远程状态，确认本地与远程一致后，再 `git checkout -b`
-- 若当前已在功能分支上且与本次任务类型一致，可复用现有分支（需记录到 codingLog.md）
+- **创建前先检查分支是否存在**：同时检查本地（`git branch --list`）和远程（`git ls-remote --heads origin {type}/{yyyyMM}`）
+  - 若已存在，直接 `git checkout {type}/{yyyyMM}` 复用，不得重复创建
+  - 若不存在，先 `git fetch` 获取远程状态，确认本地与远程一致后，再 `git checkout -b {type}/{yyyyMM}` 创建
+- 若当前已在同类型月度分支上，继续复用（需记录到 codingLog.md）
 
 ### 2.4 batch 模式特殊规则
 
-- 所有子任务共享同一个分支，由 `fully-coding-batch` 的 Orchestrator 在步骤 2-B 统一创建
+- 所有子任务共享同一个月度大版本分支，由 `fully-coding-batch` 的 Orchestrator 在批次步骤 2（串行启动）统一创建或复用
+- 共享分支命名同样遵循 `{type}/{yyyyMM}`
 - `fully-coding` 通过 `--git-branch {name}` 参数接收共享分支名，跳过分支创建，直接复用
 - 子任务启动时自动 `git checkout {branch-name}` 切换到共享分支，确保继承前序子任务的代码变更
 - 每个子任务的 commit message 仍使用子任务自己的时间戳，便于追溯
-- 批次完成后，所有子任务的代码变更都在同一分支上，用户只需合并该分支即可
+- 批次完成后，所有子任务的代码变更都在同一月度分支上，用户只需合并该分支即可
 
 ---
 
@@ -97,8 +98,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 | 步骤 | git 操作限制 |
 |------|-------------|
-| 步骤 1-5 | 禁止任何 git commit / push（允许本地 `git status` / `git diff` 查看） |
-| 步骤 6-7 | 禁止 git push（允许本地 commit 作为评审参考，由 Orchestrator 执行） |
+| 步骤 1-7 | 禁止任何 git commit / push（允许本地 `git status` / `git diff` 查看） |
 | 步骤 8 | 允许 git add / commit / push（push 需用户确认） |
 
 ---

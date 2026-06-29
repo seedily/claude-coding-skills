@@ -1,6 +1,6 @@
 ---
 name: fully-coding
-description: 面向 Claude Code 的多角色串行流转、全自动编程、自主进化工具，支持完整 9 步交付、--plan-only 方案模式、--quick-dev 轻量开发模式
+description: 从自然语言需求到代码交付的全自动开发流水线。适用于"实现某功能 / 开发某模块 / 从需求到交付 / 需求分析到代码实现"等场景。多角色串行 9 步闭环（需求→方案→实现→评审→测试→文档→自检），支持 --plan-only 方案模式、--quick-dev 轻量修复、断点续跑
 ---
 
 # Fully Coding
@@ -51,6 +51,8 @@ description: 面向 Claude Code 的多角色串行流转、全自动编程、自
 | 方案模式 | `--plan-only` | Step 1-4 | 只需要生成需求、开发范围和开发方案，先审方案再开发 |
 | 轻量开发模式 | `--quick-dev` | 最小需求记录 → Step 3 → Step 5 → Step 6 → Step 7 | 小 bug、明确小改动、无需完整知识库同步的快速修复 |
 
+> 各模式的**执行范围、完成状态与互斥约束**以 `rules/workflow-rules.md §3.0` 为唯一权威源；本表仅作入口概览，勿在此维护权威定义。
+
 ## 9 步流程
 
 | Step | 角色 | 输出 | 关键动作 |
@@ -93,7 +95,7 @@ AUTO-resume-{date}.log
 {{config.knowledge_dir}}/{{config.tech_design_glob}}
 {{config.knowledge_dir}}/{{config.service_design_glob}}
 {{config.knowledge_dir}}/{{config.error_code_doc}}
-{{config.knowledge_dir}}/{{config.feature_impl_template}}
+{{config.feature_impl_template}}
 {{config.knowledge_dir}}/{{config.feature_impl_overview}}
 {{config.knowledge_dir}}/{{config.feature_impl_menu_iteration}}
 {{config.knowledge_dir}}/{{config.feature_impl_glob}}

@@ -49,7 +49,7 @@ description: fully-coding 串行工作流红线规则。约束文档落盘、角
 
 所有步骤必须遵守：
 
-- **进入前检查**：确认本步骤进入条件满足；除 batch 子任务从步骤 3 开始外，步骤 N 开始前必须确认步骤 N-1 输出文档已落盘。
+- **进入前检查**：确认本步骤进入条件满足；当且仅当**同时**传入 `--start-step 3` 且 `--batch-subtask` 的 batch 子任务从步骤 3 开始并豁免"步骤 N-1 输出文档已落盘"检查（但仍须满足本步骤必填输入，且子任务 `userStory.md` 已由 batch Orchestrator 在拆分阶段填写完整，见 `../../fully-coding-batch/rules/batch-workflow-rules.md §2`）；其余情况下步骤 N 开始前必须确认步骤 N-1 输出文档已落盘。
 - **执行中上报**：执行期间必须按 `heartbeat-resume-rules.md` 更新 `last-heartbeat`、`current-step`、`current-role`、`pid`。
 - **离开前检查**：确认本步骤必填输出字段已写入对应文档；若退出条件不满足，不得进入下一步。
 - **续跑判断**：若章节标题存在但必填输出为空，视为该步骤未完成，续跑时应从该步骤继续。
@@ -77,13 +77,13 @@ description: fully-coding 串行工作流红线规则。约束文档落盘、角
 
 ### 3.4 Step 3：开发范围
 
-**进入条件**：Step 2 退出条件已满足；`{ts}-codingLog.md` 已存在或可创建；batch 子任务可从 Step 3 开始，但必须已有完整 `userStory.md`。
+**进入条件**：普通任务必须满足 Step 2 退出条件；`{ts}-codingLog.md` 已存在或可创建。batch 子任务当且仅当同时传入 `--start-step 3` 与 `--batch-subtask` 时可从 Step 3 开始并豁免 Step 2 输出落盘检查，但必须已有由 batch Orchestrator 在拆分阶段填写完整的 `userStory.md`。
 
 **必填输入**：`{ts}-userStory.md`；技术方案文档；服务设计文档；错误码文档。
 
 **必填输出**：写入 `{ts}-codingLog.md` 的「影响服务」「影响模块」「改动文件清单」「git 分支信息」「删除/废弃类变更检查清单（如适用）」。
 
-**退出条件**：「影响服务」「影响模块」「改动文件清单」已填写；若暂时无法定位具体文件，必须写明原因和下一步定位方式；若涉及删除/废弃类变更，必须完成残留引用检查项。
+**退出条件**：「影响服务」「影响模块」「改动文件清单」已填写；若暂时无法定位具体文件，必须写明原因和下一步定位方式；若涉及删除/废弃类变更，必须完成残留引用检查项；**若涉及前端页面/菜单/路由，步骤 3 必须记录「前端目录约定」，说明现有 `src/views/` 目录风格及本次新增页面实际路径**。
 
 ### 3.5 Step 4：开发方案
 
@@ -93,11 +93,11 @@ description: fully-coding 串行工作流红线规则。约束文档落盘、角
 
 **必填输出**：写入 `{ts}-codingLog.md` 的「方案摘要」「新增/更新的功能实现文档路径」「文档处理方式与原因」「关键设计决策」「错误码使用情况」「幂等性设计说明」。
 
-**退出条件**：方案能直接指导开发者编码；接口、数据模型、核心逻辑、异常处理已说明；写操作已说明幂等性策略，或说明为什么不需要幂等；若新增错误码，已记录取值、含义、使用场景。`--plan-only` 模式下，Step 4 完成后更新 `codingLog.md` frontmatter：`status=planned`，然后停止流程并向用户报告方案产物路径。
+**退出条件**：方案能直接指导开发者编码；接口、数据模型、核心逻辑、异常处理已说明；写操作已说明幂等性策略，或说明为什么不需要幂等；若新增错误码，已记录取值、含义、使用场景；**若涉及前端页面，方案中的前端文件路径必须与步骤 3 记录的现有 `src/views/` 目录风格一致，否则在「代码与文档偏差说明」中提前记录**。`--plan-only` 模式下，Step 4 完成后更新 `codingLog.md` frontmatter：`status=planned`，然后停止流程并向用户报告方案产物路径。
 
 ### 3.6 Step 5：开发实现
 
-**进入条件**：Step 4 退出条件已满足；开发方案中涉及的文件路径或模块边界已明确。`--quick-dev` 模式可在 Step 3 退出后直接进入，但必须先在 `codingLog.md` Step 5 记录轻量实现思路。
+**进入条件**：Step 4 退出条件已满足；开发方案中涉及的文件路径或模块边界已明确。`--quick-dev` 模式不执行 Step 4，可在 Step 3 退出后直接进入，但必须先在 `codingLog.md` Step 5 记录轻量实现思路，且 Step 5 必填输入中的「codingLog Step 4」对 quick-dev 不适用（改为读取 Step 3 方案要点 + userStory）。
 
 **必填输入**：`codingLog.md` Step 4；相关规则文件；现有代码。
 
@@ -113,11 +113,11 @@ description: fully-coding 串行工作流红线规则。约束文档落盘、角
 
 **必填输出**：写入 `{ts}-codingLog.md` 的「DBA 意见」「代码评审员意见」「问题清单」「问题分级」「修复结果」「评审结论」。
 
-**退出条件**：所有问题均已分类；auto-fix 问题已修复或记录保留原因；block 问题仅在达到阻塞标准时登记；幂等性、错误码、SQL/缓存、安全规则已检查；评审结论为「通过」或「有条件通过」才可进入 Step 7。`--quick-dev` 模式下，Step 6 评审通过后直接进入 Step 7，Step 7 通过后即可完成任务。
+**退出条件**：所有问题均已分类；auto-fix 问题已修复或记录保留原因；block 问题仅在达到阻塞标准时登记；幂等性、错误码、SQL/缓存、安全规则已检查；评审结论为「通过」或「需自动修复」才可进入 Step 7（「需自动修复」指已进入或即将进入修复循环，修复循环结束、问题清零或可接受后即满足进入 Step 7 条件）。`--quick-dev` 模式下，Step 6 评审通过后直接进入 Step 7，Step 7 通过后即可完成任务。
 
 ### 3.8 Step 7：测试用例
 
-**进入条件**：Step 6 已通过或有条件通过；自动修复循环已结束。
+**进入条件**：Step 6 评审结论为「通过」或「需自动修复」且自动修复循环已结束（问题清零或可接受）。
 
 **必填输入**：已评审通过的代码；`codingLog.md` Step 6；相关测试规范或已有测试。
 
@@ -133,7 +133,7 @@ description: fully-coding 串行工作流红线规则。约束文档落盘、角
 
 **必填输出**：写入 `{ts}-codingLog.md` 的「更新文档清单」「错误码文档更新」「代码与文档偏差说明」「公共资源变更摘要」。
 
-**退出条件**：涉及的知识库文档已同步；新增错误码已反向更新错误码文档；新增/修改 `{{config.feature_impl_glob}}` 时，已同步 `{{config.knowledge_dir}}/{{config.feature_impl_overview}}`；涉及菜单、页面、路由或权限入口变更时，已同步 `{{config.knowledge_dir}}/{{config.feature_impl_menu_iteration}}`；若 batch 子任务修改公共资源，已记录到公共资源变更摘要。
+**退出条件**：涉及的知识库文档已同步；新增错误码已反向更新错误码文档；新增/修改 `{{config.feature_impl_glob}}` 时，已同步 `{{config.knowledge_dir}}/{{config.feature_impl_overview}}`；涉及菜单、页面、路由或权限入口变更时，已同步 `{{config.knowledge_dir}}/{{config.feature_impl_menu_iteration}}`；**涉及前端页面时，必须在 `codingLog.md`「代码与文档偏差说明」中核对并记录实际新增/修改页面路径与步骤 3/4 计划路径的一致性**；**涉及模块结构/分层/网关/领域服务职责变更时，已更新 `{{config.knowledge_dir}}/{{config.tech_architecture_doc}}`（见 §7.4 触发矩阵）**；若 batch 子任务修改公共资源，已记录到公共资源变更摘要。
 
 ### 3.10 Step 9：自主进化
 
@@ -211,11 +211,13 @@ description: fully-coding 串行工作流红线规则。约束文档落盘、角
 
 步骤 6 采用「评审 → 自动修复 → 验证」的闭环机制：
 
-1. **评审阶段**（DBA + Reviewer）：
-   - 审查代码，按上述分级标准对每个问题标记 `auto-fix` 或 `block`
-   - 对 `auto-fix` 问题，**必须提供具体修复方案**（含修复代码片段或操作步骤）
-   - 对 `block` 问题，必须详细说明阻塞原因和可选方案
-   - 输出评审结论：「通过（无问题）」或「需自动修复（N 项）」或「阻塞（N 项）」
+1. **评审阶段**（DBA + Reviewer，同一响应内分两段输出，**不得**拆成两个 Agent 并行或先后 spawn——红线见 §1）：
+   - **DBA 段（先行、独立成段）**：聚焦表结构、索引、字段类型、SQL/缓存、迁移脚本、数据安全与幂等落库。**只要 Step 5 涉及 DDL / SQL / 索引 / 持久层变更，DBA 段为必填**，须给出结构审查结论并引用具体表/字段/索引与代码行号；无持久层变更时可只写一句"本变更未触及持久层，DBA 段无意见"，**不得与 Reviewer 段混写或整体省略**。
+   - **Reviewer 段（随后）**：聚焦编码规范、类型安全、业务校验、序列化/格式、架构分层、性能、测试覆盖。
+   - 两段统一按上述分级标准对每个问题标记 `auto-fix` 或 `block`。
+   - 对 `auto-fix` 问题，**必须提供具体修复方案**（含修复代码片段或操作步骤）。
+   - 对 `block` 问题，必须详细说明阻塞原因和可选方案。
+   - 输出评审结论：「通过（无问题）」或「需自动修复（N 项）」或「阻塞（N 项）」。
 
 2. **自动修复阶段**（Developer）：
    - 若评审结论为「需自动修复」：
@@ -269,7 +271,7 @@ description: fully-coding 串行工作流红线规则。约束文档落盘、角
 
 - 步骤 4 生成开发方案前必须先检索 `{{config.knowledge_dir}}/{{config.feature_impl_overview}}`，按「功能名称 / 所属模块 / 实现文档路径 / 关联菜单/入口」判断是否已有同名、相近或同一入口下的功能文档；若已有，应优先更新既有功能实现文档并追加本次功能描述，避免重复创建。
 - 只有在概览表和既有 `{{config.feature_impl_glob}}` 均缺少可承载文档，或本次实现属于非常核心且开发量大的功能、继续追加会导致职责混杂或文档过长时，步骤 4 才可新增 `{{config.feature_impl_glob}}` 文档。
-- 新增 `{{config.feature_impl_glob}}` 文档必须严格参考 `{{config.knowledge_dir}}/{{config.feature_impl_template}}`，命名格式必须为：`6.功能实现-[管理web|会员web|会员app]-[一级菜单|核心功能]-[二级菜单].md`。无二级菜单时，最后一段使用能准确表达入口或能力的核心功能名；非前端入口的后端核心能力，端标识优先按主要使用端选择，并在 `codingLog.md` 记录判断依据。
+- 新增 `{{config.feature_impl_glob}}` 文档必须严格参考 `{{config.feature_impl_template}}`，命名格式必须为：`6.功能实现-[管理web|会员web|会员app]-[一级菜单|核心功能]-[二级菜单].md`。无二级菜单时，最后一段使用能准确表达入口或能力的核心功能名；非前端入口的后端核心能力，端标识优先按主要使用端选择，并在 `codingLog.md` 记录判断依据。
 - 步骤 8 必须按变更类型反向更新 `{{config.knowledge_dir}}/{{config.service_design_glob}}` 和 `{{config.knowledge_dir}}/{{config.feature_impl_glob}}`
 - 若步骤 4/5 新增了错误码枚举值，步骤 8 必须同步反向更新文档 `{{config.knowledge_dir}}/{{config.error_code_doc}}`，并根据文档说明，判断是否要更新公共组件的 {{config.error_code_enums}} 接口
 - 禁止在步骤 1/2/3/5/6/7 中直接修改 `{{config.knowledge_dir}}/` 下的设计文档（错误码文档除外，新增错误码需在步骤 5 记录、步骤 8 统一更新）
@@ -319,6 +321,7 @@ description: fully-coding 串行工作流红线规则。约束文档落盘、角
 | 新增/修改菜单、页面入口、路由、权限入口 | `{{config.feature_impl_menu_iteration}}` |
 | 新增错误码或领域枚举 | `{{config.error_code_doc}}` + 对应 `{{config.feature_impl_glob}}` |
 | 服务接口、依赖关系或调用方式变化 | `{{config.service_design_glob}}` + 对应 `{{config.feature_impl_glob}}` |
+| 模块结构/分层/网关路由/领域服务职责变更 | `{{config.tech_architecture_doc}}`（对应 `agents/architect.md` Step 8 的架构章节更新） |
 
 ## 8. 异常处理规则
 
@@ -329,7 +332,7 @@ description: fully-coding 串行工作流红线规则。约束文档落盘、角
 以下情况**不登记** blockLog.md（但需记录到 codingLog.md 或 userStory.md 对应章节）：
 - 步骤 6 评审「阻塞」但尚在 3 次循环修复期内
 - 步骤 7 测试失败但尚在 3 次循环修复期内
-- 步骤 6 评审「有条件通过」（流程可自动继续）
+- 步骤 6 评审结论为「需自动修复」且尚在 3 次循环修复期内（流程可自动继续）
 
 以下情况**必须登记** blockLog.md：
 - 循环修复达到上限（3 次）后仍无法解决

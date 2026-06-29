@@ -34,6 +34,7 @@ description: Step 6 轻量代码评审清单。默认覆盖所有规则维度，
 | DDD 分层 | api/app/domain/infrastructure/dao 依赖方向；聚合根职责；领域服务边界 | `backend-ddd-layer-rules.md` |
 | 新聚合根 | DTO、PO、Mapper、Aggregate、DomainService、Repository、ApplicationService、Controller 是否齐全 | `implementation-checklist-rules.md` |
 | 编码规范 | 命名、泛型、Lombok、魔法值、日志、注释、类型安全 | `backend-code-standard-rules.md` |
+| 接口契约 | 响应统一 `DataResponse`（禁自定义包装类）；`@RequestBody` 直接 DTO/Map（禁 `{api,version,data}` 包装）；DTO 字段 camelCase（禁 `@JsonNaming(SnakeCaseStrategy)` / `@JsonProperty(snake_case)`）；`convertValue` 关 `FAIL_ON_UNKNOWN_PROPERTIES` | `backend-code-standard-rules.md` |
 | 异常/错误码 | `[L][CC][SS][D]`；优先已有枚举；新增错误码记录 Step 8 更新 | `error-handling-rules.md`; 错误码文档 |
 | 安全 | SQL 注入、XSS、越权、硬编码密钥、敏感信息输出 | `security-rules.md` |
 | 幂等性 | 写操作是否有幂等键、唯一约束、重试语义或明确说明无需幂等 | `workflow-rules.md`; `persistence-sql-cache-rules.md` |

@@ -45,7 +45,7 @@ description: 新增聚合根实现 Checklist。定义 api/dao/domain/infrastruct
 ## 5. app 层
 
 - [ ] `application/{Aggr}ApplicationService.java` —— 用例编排，`@Transactional`，请求拆解/组装
-- [ ] `controller/{Aggr}Controller.java` —— 全部 POST，路径体现动作
+- [ ] `controller/{Aggr}Controller.java` —— 全部 POST；路径 `/模块/资源/动作`（资源单数、动作用 `query`/`queryList`/`queryPage`/`create`/`update`/`delete`，禁 RESTful 复数/名词当动作）；返回 `DataResponse`；`@RequestBody` 直接 DTO/Map（禁自定义包装类）
 - [ ] `domaineventhandler/{Aggr}EventHandler.java` —— 事件监听
 
 ---

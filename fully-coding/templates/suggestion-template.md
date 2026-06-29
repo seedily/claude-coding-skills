@@ -1,6 +1,6 @@
 ---
 type: suggestion-template
-description: 任务完成后改进建议文档模板。由 Orchestrator 在步骤 8 结束后生成，记录提示词优化、技术债务和工具改进建议。
+description: 任务完成后改进建议文档模板。由 Orchestrator 在步骤 9（自主进化）生成，记录提示词优化、技术债务和工具改进建议。
 ---
 
 # 任务总结与改进建议

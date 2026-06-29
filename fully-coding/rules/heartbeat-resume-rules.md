@@ -35,6 +35,8 @@ batch-subtask: false  # batch 子任务为 true
 - `current-step`：当前步骤编号
 - `current-role`：当前角色名称
 - `pid`：当前 Orchestrator 进程标识符
+- `batch-subtask`：是否为 batch 子任务（`true` / `false`）
+- `execution-mode`：执行模式，取值 `standard` / `plan-only` / `quick-dev`，启动时写入一次，恢复时用于判断该任务是否走完整 9 步、停在 Step 4（planned）或跳过 Step 4/8/9
 
 ## 2. 任务状态流转
 
@@ -180,5 +182,7 @@ pid: {process-id}
 - 执行期间每启动/完成一个子任务、或每 `heartbeat_interval_seconds` 秒更新心跳；
 - 子任务阻塞时更新 `status=blocked`；
 - 批次完成时更新 `status=completed`。
+
+> **BATCH 与子任务 codingLog 的字段差异**：BATCH 进度文档只维护到子任务粒度（`current-subtask`），**不维护** `current-step` / `current-role` / `execution-mode`——这些子任务级步骤心跳由各 `{tsN}-codingLog.md` 自行维护。接管判断（§6）作用于 BATCH 时只看 `status` / `last-heartbeat` / `pid`，不读 `current-step`。
 
 批量 Orchestrator 的 resume 逻辑与本规则一致，额外检查子任务与其他独立任务是否仍在运行。

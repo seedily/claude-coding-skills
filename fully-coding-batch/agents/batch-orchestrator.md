@@ -21,12 +21,12 @@ description: fully-coding-batch 编排者。负责批次需求拆分、共享分
 1. 读取用户原始需求，识别独立功能边界。
 2. 分析依赖关系，生成子任务编号和执行顺序。
 3. 使用 `templates/batch-progress-template.md` 创建 BATCH 进度文档。
-4. 为每个子任务创建 `{ts}-userStory.md` 和 `{ts}-codingLog.md`。
+4. 为每个子任务创建 `{tsN}-userStory.md`（按 `../../fully-coding/templates/user-story-template.md` 填写完整字段，见 `rules/batch-workflow-rules.md §2`）和 `{tsN}-codingLog.md`（blockLog/suggestion 由子任务执行中按需产出，见 `../fully-coding/SKILL.md` 产出表）。
 5. 写入 BATCH frontmatter：`status=running`、`last-heartbeat`、`current-subtask`、`pid`。
 
 ## Step 2：串行启动
 
-1. 按 `rules/batch-workflow-rules.md` 创建或复用共享分支。
+1. 按 `rules/batch-workflow-rules.md` 创建或复用月度大版本共享分支（命名 `{type}/{yyyyMM}`，存在则检出，不存在则创建）。
 2. 将共享分支写入 BATCH 进度文档。
 3. 按执行顺序逐个调用：
    ```text
@@ -39,6 +39,7 @@ description: fully-coding-batch 编排者。负责批次需求拆分、共享分
 - 每个子任务启动前、完成后或 batch 心跳间隔到期时，更新 BATCH frontmatter。
 - 若发现子任务 blockLog 中存在「用户确认状态：待确认」，按 `rules/batch-workflow-rules.md` 登记 BATCH 阻塞并停止后续子任务。
 - 不为常规状态汇报暂停，不询问“是否继续”。
+- **禁止用 `AskUserQuestion` / `EnterPlanMode` 在子任务之间征求“是否继续”**。子任务完成且无 blockLog 待确认时，启动下一个子任务是唯一合法动作；用确认工具征求继续意向属于违规，会破坏 batch 自治串行。允许暂停的仅限：真阻塞（rules/batch-workflow-rules.md §6）、破坏性/不可逆操作、用户主动打断。
 
 ## Step 4：完成汇总
 

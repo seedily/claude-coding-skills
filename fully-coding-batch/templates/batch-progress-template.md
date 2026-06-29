@@ -24,6 +24,7 @@ pid: {process-id}
 - 依赖关系：无依赖
 - 文档路径：`{{config.output_dir}}/{ts1}-userStory.md`
 - 开发日志：`{{config.output_dir}}/{ts1}-codingLog.md`
+- 阻塞记录：`{{config.output_dir}}/{ts1}-blockLog.md`（如有）
 - 当前步骤：待启动 / 步骤 N（{角色名}）
 - 状态：待启动 / 进行中 / 阻塞 / 已完成
 - 完成时间：
@@ -34,6 +35,7 @@ pid: {process-id}
 - 依赖关系：依赖子任务 1 / 无依赖
 - 文档路径：`{{config.output_dir}}/{ts2}-userStory.md`
 - 开发日志：`{{config.output_dir}}/{ts2}-codingLog.md`
+- 阻塞记录：`{{config.output_dir}}/{ts2}-blockLog.md`（如有）
 - 当前步骤：待启动
 - 状态：待启动
 - 完成时间：
@@ -49,7 +51,7 @@ pid: {process-id}
 
 ## Git 分支信息
 
-- 共享分支名：`{type}/{batch-ts}-{batch-brief-desc}`
+- 共享分支名：`{type}/{yyyyMM}`
 - 基于分支：`main` / `master`
 - 子任务 commit 数：
 
@@ -74,5 +76,6 @@ pid: {process-id}
 
 ## 任务状态
 
-- 当前状态：running / blocked / completed
+- 当前状态：running / resuming / blocked / stalled / failed / completed
+  > 状态语义复用 `../../fully-coding/rules/heartbeat-resume-rules.md`；batch 不产生 `planned`（子任务不带 `--plan-only`）。
 - 完成时间：

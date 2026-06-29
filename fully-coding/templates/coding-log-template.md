@@ -7,7 +7,7 @@ last-heartbeat: {yyyyMMdd-HHmmss}
 current-step: 3
 current-role: architect
 pid: {process-id}
-batch-subtask: false
+batch-subtask: false  # batch 子任务启动时由 Orchestrator 覆写为 true（见 agents/orchestrator.md 初始化第3步）
 ---
 
 # 开发日志
@@ -25,6 +25,12 @@ batch-subtask: false
   - 新增：
   - 修改：
   - 删除：
+- 前端目录约定（如涉及前端页面/菜单）：
+  - 项目现有 `src/views/` 目录风格：[扁平 / 按一级菜单 / 按模块]
+  - 本次新增页面实际路径：
+    - admin-biz-web：`src/views/...`
+    - member-biz-web：`src/views/...`
+  - 与方案阶段初拟路径的偏差说明（如有）：
 
 ## 步骤 4：开发方案
 
@@ -50,7 +56,7 @@ batch-subtask: false
 
 ## 步骤 6：代码评审
 
-- 评审人：DBA、架构师/代码评审员
+- 评审人：DBA、代码评审员
 
 ### DBA 意见
 
@@ -60,7 +66,7 @@ batch-subtask: false
 ### 代码评审员意见
 
 - 问题清单：
-- 评审结论：通过 / 有条件通过 / 阻塞
+- 评审结论：通过（无问题）/ 需自动修复（N 项）/ 阻塞（N 项）
 - 修复结果：
 
 ## 步骤 7：测试用例
@@ -90,12 +96,17 @@ batch-subtask: false
   - 功能实现概览一致性检查：
   - 菜单功能迭代一致性检查：
   - 功能文档路径有效性检查：
+  - 前端目录一致性检查：
+    - `codingLog.md` 步骤 3 记录的「前端目录约定」与实际新增/修改页面路径一致
+    - 功能实现文档中的页面路径与实际代码路径一致
+    - 若存在偏差，已在「代码与文档偏差说明」中记录原因
 - 自动补充更新：
 - 工具改进建议：
 
 ## 任务状态
 
 - 最终状态：completed / planned / blocked / failed
+  > 仅记录任务终态；运行中间态（`running` / `resuming` / `stalled`）不写入本字段，由 frontmatter `status` 维护。
 - 模式说明：标准模式 Step 9 后 completed；plan-only Step 4 后 planned；quick-dev Step 7 后 completed
 
 ---

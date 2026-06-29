@@ -393,3 +393,68 @@ public class UserLoginDto {
 - [ ] 优先使用标准库与成熟工具类（Apache Commons、Spring、Jackson）
 - [ ] 复杂 SQL 已确认索引命中
 - [ ] 未使用 `SELECT *`
+
+---
+
+## 10. 接口契约与序列化
+
+> Controller 对外契约的统一规范，必须遵守。
+
+### 10.1 统一响应
+
+Controller 返回 `com.grace.common.api.dto.DataResponse<T>`（或 `ListResponse` / `PageResponse`）。禁止自定义响应包装类（如 `XxxResult` / `XxxResponse` 包装类、裸 `ResponseEntity<Map>`）。
+
+```java
+// ✅ 正确
+public DataResponse<UserDto> queryUser(...) { ... }
+
+// ❌ 错误：自定义包装类（code 用 int、缺 detail/disclaimer/success 等标准字段）
+public XxxResponse queryUser(...) { ... }
+```
+
+### 10.2 请求体
+
+`@RequestBody` 直接接收业务 DTO（`XxxRequest`）或 `Map<String, Object>`。禁止自定义统一请求包装类（如 `{api, version, data}` 结构）把业务数据再包一层后用 `getData()` 取。
+
+```java
+// ✅ 正确
+public DataResponse<Void> update(@RequestBody UpdateUserRequest req) { ... }
+public DataResponse<?> query(@RequestBody Map<String, Object> req) { ... } // 动态字段
+
+// ❌ 错误：自定义包装 + getData()
+public DataResponse<?> query(@RequestBody XxxRequestWrapper req) {
+    Object data = req.getData();
+}
+```
+
+### 10.3 字段命名一律 camelCase
+
+DTO / VO / PO / 响应字段全部 camelCase。禁止用 Jackson 注解把字段转 snake_case：
+
+| ❌ 错误 | 原因 |
+|---|---|
+| `@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)` | 类级强制 snake_case，破坏前后端 camelCase 契约 |
+| `@JsonProperty("user_name")` | 字段级强制 snake_case，同上 |
+
+对接外部 snake_case 系统（第三方/下游服务）时，在适配层（ApplicationService / Converter）用 `map.get("snake_case")` 转换，DTO 本身保持 camelCase。
+
+### 10.4 ObjectMapper 容错
+
+`ObjectMapper.convertValue` 把前端 body 转 DTO 时，必须关闭未知字段失败，避免前端多传/改名字段直接抛 `UnrecognizedPropertyException` → 500。优先注入 Spring 的 `ObjectMapper`，不要 `new ObjectMapper()`。
+
+```java
+// ✅ 正确：注入 + 关闭未知字段失败
+private final ObjectMapper objectMapper;
+
+private <T> T parse(Object data, Class<T> clazz) {
+    if (data instanceof Map<?, ?> map) {
+        return objectMapper.copy()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .convertValue(map, clazz);
+    }
+    return null;
+}
+
+// ❌ 错误：默认 strict，前端字段不匹配即 500
+new ObjectMapper().convertValue(map, XxxRequest.class);
+```

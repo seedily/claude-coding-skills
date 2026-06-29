@@ -23,6 +23,7 @@ description: fully-coding 每次步骤开始前的自检钩子。检查输入文
 - [ ] 若当前步骤 > 1，当前任务的 `userStory.md` 已存在
 - [ ] 若当前步骤 > 3，当前任务的 `codingLog.md` 已存在
 - [ ] 上一步骤在对应文档中的章节已填写且非空
+- [ ] **batch 子任务特例**：`codingLog` frontmatter `batch-subtask: true` 且从 Step 3 进入的子任务，豁免"步骤 N-1 输出文档已落盘"检查（见 `rules/workflow-rules.md §3.1`），但仍须满足本步骤必填输入，且 `userStory.md` 已由 batch Orchestrator 在拆分阶段填全
 
 ### C. 输出目录检查
 - [ ] `{{config.output_dir}}/` 目录存在，不存在则创建

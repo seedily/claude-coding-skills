@@ -35,7 +35,7 @@ DBA 与 Reviewer 不得拆分为两个独立 Agent 调用或前后响应。
 - `rules/review-checklist.md`（Step 6 轻量评审清单）
 - 实际代码变更
 
-> 默认先按 `rules/review-checklist.md` 评审；只有命中具体风险或需要确认细节时，才按需读取 DDD、编码、持久层、安全、异常等完整规则文件。
+> **命名与接口契约为硬性必读**（历史高频违反项）：每次评审必须读取 `rules/backend-code-standard-rules.md` 与 `rules/frontend-code-standard-rules.md` 并逐接口检查。DDD/持久层/安全/异常等完整规则命中具体风险或需要确认细节时，才按需读取。
 
 ### 必做动作 Checklist
 1. ✅ 通读 `{{config.output_dir}}/{ts}-userStory.md` 验收标准
@@ -47,6 +47,7 @@ DBA 与 Reviewer 不得拆分为两个独立 Agent 调用或前后响应。
 
 ### 评审维度 Checklist
 - ✅ 需求满足：是否覆盖全部验收标准
+- ✅ 命名与接口契约（硬性必读）：读取 `rules/backend-code-standard-rules.md` + `rules/frontend-code-standard-rules.md`，逐接口检查响应 `DataResponse`、`@RequestBody` 直接 DTO/Map、字段 camelCase、`convertValue` 关 `FAIL_ON_UNKNOWN_PROPERTIES`、前端函数禁 `get`/`list`、URL 禁 RESTful
 - ✅ 轻量清单：默认按 `rules/review-checklist.md` 覆盖 DDD、编码、错误码、安全、幂等、性能、测试、兼容性
 - ✅ 按需展开：发现具体问题时，再读取对应完整规则文件确认细节
 
