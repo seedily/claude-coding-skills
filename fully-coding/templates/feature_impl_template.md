@@ -1,5 +1,11 @@
 # 功能实现 - [功能描述]
 
+> 文档定位：[一句话说明本文聚焦的功能域与边界，例如“聚焦管理端 XX 功能的后端实现与治理闭环；会员端相关能力见 `6.功能实现-xxx.md`”]
+>
+> 最后更新：[YYYY-MM-DD]
+>
+> 聚合范围（仅聚合文档填写）：[说明本文合并了哪些历史文档，例如“合并原 `6.功能实现-a.md`、`6.功能实现-b.md`，后续统一在本文维护”]
+
 ## 一、需求背景与目标
 
 ### 1.1 背景
@@ -77,31 +83,33 @@
 
 ### 4.1 调用链
 
-需要有明确的数据流转过程，细化到接口粒度。
+需要有明确的数据流转过程，细化到接口粒度。优先用 mermaid `flowchart` 表达跨服务/跨层数据流；线性单链路也可用下方文本箭头。
 
-```
-[调用方]
-  ↓
-[服务A Controller (注解/拦截器)]
-  ↓
-[中间件/消息队列]
-  ↓
-[服务B Consumer/Service]
-  ↓
-[数据库/缓存]
+```mermaid
+flowchart TD
+    Caller([调用方])
+    SvcA[服务A Controller - 注解/拦截器]
+    MQ[(中间件/消息队列)]
+    SvcB[服务B Consumer/Service]
+    DB[(数据库/缓存)]
+    Caller --> SvcA --> MQ --> SvcB --> DB
 ```
 
 ### 4.2 时序图
 
-绘制关键交互过程的时序图。
+绘制关键交互过程的时序图，统一使用 mermaid `sequenceDiagram`（含分支用 `alt/else/end`）。
 
-```
-ParticipantA    ParticipantB    ParticipantC    Database
-     |               |               |              |
-     |-- 操作 ------>|               |              |
-     |               |-- 调用 ------>|              |
-     |               |               |-- 持久化 --->|
-     |<-- 返回 ------|               |              |
+```mermaid
+sequenceDiagram
+    participant A as ParticipantA
+    participant B as ParticipantB
+    participant C as ParticipantC
+    participant D as Database
+    A->>B: 操作
+    B->>C: 调用
+    C->>D: 持久化
+    C-->>B: 返回
+    B-->>A: 返回
 ```
 
 ### 4.3 接口与事务
@@ -111,6 +119,8 @@ ParticipantA    ParticipantB    ParticipantC    Database
 | [service] | [HTTP方法 + 路径] | [请求JSON字段] | [响应JSON字段] | [接口说明] | [REQUIRED/NONE/SUPPORTS] |
 
 ### 4.4 表结构
+
+**数据库初始化约定**：dev 环境各 DB-backed 后台服务仅以服务内 `src/main/resources/init.sql` 作为权威初始化入口（按服务固定路径，如 `xxx-app/src/main/resources/init.sql`，覆盖对应 schema）；历史 `docs/ddl`、`docs/dml`、DAO migration 仅作为来源参考，不再作为执行入口。`init.sql` 须用 `CREATE TABLE IF NOT EXISTS` + `CREATE INDEX IF NOT EXISTS` 保证可重复执行，菜单/权限点/角色等用 `ON CONFLICT DO UPDATE` 维护；存量环境的结构变更走 `db/migration/V{n}__xxx.sql`。
 
 #### [表名] 表
 
@@ -201,7 +211,39 @@ ParticipantA    ParticipantB    ParticipantC    Database
 - **幂等键**：[如 traceId、业务主键]
 - **去重策略**：[如数据库唯一索引、Redis SETNX]
 
-#### 4.6.7 监控指标
+#### 4.6.7 限流设计
+
+仅当功能涉及高频/资源敏感入口（如 AI 调试、查询接口）时填写；普通 CRUD 可省略本节。
+
+**Redis Key**：
+
+- 分钟限流：`[biz]:limit:{userId}:min`
+- 日限流：`[biz]:limit:{userId}:day`
+- 锁定：`[biz]:lock:{userId}`
+
+**Lua 滑动窗口脚本（示例）**：
+
+```lua
+local key = KEYS[1]
+local lockKey = KEYS[2]
+local window = tonumber(ARGV[1])
+local limit = tonumber(ARGV[2])
+local lockSeconds = tonumber(ARGV[3])
+local lock = redis.call('GET', lockKey)
+if lock then return {-1, redis.call('TTL', lockKey)} end
+local now = redis.call('TIME')[1] * 1000000 + redis.call('TIME')[2]
+redis.call('ZREMRANGEBYSCORE', key, 0, now - window * 1000000)
+local count = redis.call('ZCARD', key)
+if count >= limit then
+    redis.call('SET', lockKey, '1', 'EX', lockSeconds)
+    return {-1, lockSeconds}
+end
+redis.call('ZADD', key, now, now)
+redis.call('EXPIRE', key, window)
+return {limit - count - 1, 0}
+```
+
+#### 4.6.8 监控指标
 
 | 指标 | 说明 | 告警阈值 |
 | --- | --- | --- |
@@ -209,7 +251,7 @@ ParticipantA    ParticipantB    ParticipantC    Database
 | `quant_xxx_failed_total` | [失败指标说明] | [阈值 + 告警级别] |
 | `quant_xxx_latency` | [延迟指标说明] | [P99 阈值 + 告警级别] |
 
-#### 4.6.8 告警规则
+#### 4.6.9 告警规则
 
 - **[告警条件1]** → [告警级别]
 - **[告警条件2]** → [告警级别]
@@ -261,9 +303,24 @@ ParticipantA    ParticipantB    ParticipantC    Database
     [具体配置]: [值]
 ```
 
+### 6.3 错误码设计
+
+本次新增/复用的错误码。编码规则遵循 `_knowledge/5.服务详细设计（错误码段位分配）.md`：错误码由系统代号（SS，十六进制）+ 领域段位（D）+ 语义位组成；若本次无新增，注明“复用 xxx-svc 已有错误码”。
+
+| 错误码 | 含义 | 使用场景 |
+| --- | --- | --- |
+| `[如 10033A]` | [如通用参数错误] | [如 SQL 为空或格式非法] |
+| `[如 10733A]` | [如业务规则校验失败] | [如 SQL 审核未通过] |
+
 
 
 ------【分割线】以上是模版内容，以下是注意事项（无需出现在正式文档中）---------------------------
 
 1. 无需做开发周期的规划、子功能优先级评估，请直接输出完整的方案。
 2. 无需罗列API请求示例，使文档保持轻量。
+3. 图表统一用 mermaid：调用链/数据流/架构用 `flowchart`，时序交互用 `sequenceDiagram`，状态机用 `stateDiagram`；不要用 ASCII 框线图。
+4. **可选节按需填写**：4.6.7 限流设计、6.3 错误码设计仅当功能命中对应场景时输出，普通 CRUD 可省略并注明“无”。
+5. **聚合文档**：当一个文档合并多个子功能模块时，每个子模块标题上方加 `> 来源：6.功能实现-xxx.md` / `> 关联菜单：` / `> 关联服务：` 引用块；全文第一节用“聚合范围”说明合并了哪些历史文档。
+6. **纯前端功能**（如管理端客服中心-工单管理）：不套用本模板的技术方案节，改用前端 6 节结构——①菜单设计 ②页面与组件（逐组件列筛选栏/表格列/操作按钮/弹窗/交互） ③API 层封装（`src/api/*.ts` 函数-路径-说明） ④路由配置 ⑤图标与侧边栏/iconMap ⑥关键实现点。涉及全链路契约时补“前端函数 ↔ 网关 ↔ 后端路径 ↔ 数据源”字段级对照表。
+7. **后端分层清单**：后端实现节可补 DDD 四层文件清单（api: Request/Response；dao: Po+Mapper；app: ApplicationService+Controller；domain: DomainService），并区分“新增文件 / 修改文件”两张表。
+8. **兼容与下线治理**：涉及 schema 迁移、字段保留兼容、功能下线（删路由/删页面/清 mock）时，单列一小节说明影响范围与存量环境处理步骤。

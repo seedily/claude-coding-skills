@@ -56,6 +56,46 @@ public class Example {
 }
 ```
 
+### 1.5 方法声明与体分离
+
+方法签名（声明行）与方法体必须分行，禁止写在同一行：
+
+```java
+// ✅ 正确
+@Override
+public UserDto queryUser(Long userId) {
+    return userRepository.findById(userId);
+}
+
+// ❌ 错误：签名与体同行
+@Override public UserDto queryUser(Long userId) { return userRepository.findById(userId); }
+```
+
+内嵌类（匿名类、内部类、FeignClient Fallback 实现）中包含多个方法时同理：每个方法独占多行，禁止压缩在一行或连续行首拼写：
+
+```java
+// ✅ 正确
+@Component
+class XxxFallback implements XxxClient {
+    @Override
+    public Map<String, Object> getFoo(Map<String, Object> request) {
+        return Map.of("result", Collections.emptyList());
+    }
+
+    @Override
+    public Map<String, Object> getBar(Map<String, Object> request) {
+        return Map.of("result", Collections.emptyList());
+    }
+}
+
+// ❌ 错误：压缩在多行（可读性差，diff 粒度粗）
+@Component
+class XxxFallback implements XxxClient {
+    @Override public Map<String, Object> getFoo(Map<String, Object> r) { return Map.of(); }
+    @Override public Map<String, Object> getBar(Map<String, Object> r) { return Map.of(); }
+}
+```
+
 ---
 
 ## 2. 命名规范
@@ -360,6 +400,7 @@ public class UserLoginDto {
 ### 9.1 基础项
 
 - [ ] `if` / `for` / `while` 体即使只有一行也使用大括号
+- [ ] 方法签名与方法体分行（禁止 `@Override public void foo() { ... }` 格式）
 - [ ] 不存在空 `catch` 块
 - [ ] 方法参数不超过 5 个（超过考虑封装为 DTO）
 - [ ] 类行数不超过 500 行

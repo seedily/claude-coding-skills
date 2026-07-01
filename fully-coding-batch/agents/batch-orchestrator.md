@@ -22,7 +22,8 @@ description: fully-coding-batch 编排者。负责批次需求拆分、共享分
 2. 分析依赖关系，生成子任务编号和执行顺序。
 3. 使用 `templates/batch-progress-template.md` 创建 BATCH 进度文档。
 4. 为每个子任务创建 `{tsN}-userStory.md`（按 `../../fully-coding/templates/user-story-template.md` 填写完整字段，见 `rules/batch-workflow-rules.md §2`）和 `{tsN}-codingLog.md`（blockLog/suggestion 由子任务执行中按需产出，见 `../fully-coding/SKILL.md` 产出表）。
-5. 写入 BATCH frontmatter：`status=running`、`last-heartbeat`、`current-subtask`、`pid`。
+5. **子任务 userStory 撰写时必须按 `../../fully-coding/rules/implementation-checklist-rules.md §0 全栈覆盖检查` 的格式，明确列出该子任务涉及的前端/后端/API/第三方集成/数据库各层，作为子任务的全栈覆盖基线**。batch Orchestrator 在拆分阶段即需判断：一个子任务是否同时需要前端和后端实现？是否需要数据库变更？是否需要对接第三方 API？需要的一律在 userStory 中标注。
+6. 写入 BATCH frontmatter：`status=running`、`last-heartbeat`、`current-subtask`、`pid`。
 
 ## Step 2：串行启动
 

@@ -306,6 +306,28 @@ public void batchCreateUsers(List<CreateUserRequest> requests) {
 
 批量操作不注册逐条领域事件，如需事件，用批量事件。
 
+### 4.3 外部服务调用（Gateway / FeignClient）
+
+远程服务调用的接口定义（FeignClient、WebClient、第三方 API 适配器等）应放置在 **domain 层的 `infrastructure.gateway` 包**中，禁止放在 `dao`（数据库持久化）层。
+
+```java
+// ✅ 正确：放在 domain.infrastructure.gateway
+package com.grace.member.domain.infrastructure.gateway;
+
+@FeignClient(name = "data-worker")
+public interface DataWorkerClient { ... }
+
+// ❌ 错误：dao 不应承担远程调用职责
+package com.grace.member.dao.remote;   // dao 层只应包含 PO / Mapper / Repository
+```
+
+| 模块 | 典型包路径 | 职责 |
+|------|-----------|------|
+| `domain.infrastructure.gateway` | `*.domain.infrastructure.gateway` | FeignClient 接口、WebClient 封装、第三方 API 适配、Fallback 兜底 |
+| `dao` | `*.dao` | PO 持久化对象、Mapper、Repository（仅限数据库实体） |
+
+Fallback 兜底类：作为 FeignClient 接口的内部静态类（`@Component class XxxFallback implements XxxClient`），保证熔断降级路径主动注册。fallback 各方法返回合理的业务默认值（空列表、`false`、空 Map），方法体须遵循 `backend-code-standard-rules.md` §1.5 的格式规范。
+
 ---
 
 ## 5. 接口风格
